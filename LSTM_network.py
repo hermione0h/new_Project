@@ -14,7 +14,7 @@ import torch.utils.data as data
 import random
 from scipy.io import savemat 
 import os
-from numpy import linalg as LA
+from sklearn.preprocessing import normalize
 
 
 # In[2]:
@@ -45,7 +45,7 @@ class lateSpeech(data.Dataset):
 
         de_file = self.data2[index]
         X1 = np.load(Xfile1)
-        X1 = LA.norm(X1)
+        X1 = normalize(X1)
         de = np.load(de_file)
         
 
@@ -72,6 +72,8 @@ def seqLen(x):
 
 
 input_file = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb_train/train_wlen_80_nfft_128_overlap_10/reverb_rir5000_roomNum10_t600.9_loc500_8kHz.npy'
+new_file = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb_valid/valid_wlen_80_nfft_128_overlap_10/reverb_rir0500_roomNum10_t600.9_loc500_8kHz.npy'
+print(seqLen(new_file),seqLen(input_file))
 
 class param:
     #img_size = (80, 80)
@@ -83,7 +85,7 @@ class param:
     osize = 1026
     lstm_s = InputSize(input_file)
     lstm_l = seqLen(input_file)
-#print(param.lstm_inputsize)
+    ts = 1
 
 mix1_train = "/data/liyuy/PROJECTS/DEREVERB3/block_conv/stft_address/train/train_wlen_80_nfft_128_overlap_10.txt"
 
@@ -112,7 +114,7 @@ val_dl = data.DataLoader(lateSpeech(mix1_val,de_val),
 #                         shuffle=False)
 
 
-# In[ ]:
+# In[10]:
 
 
 class LSTM_hn(nn.Module):
@@ -149,7 +151,7 @@ class LSTM_hn(nn.Module):
         return de_out
 
 
-# In[ ]:
+# In[11]:
 
 
 model = LSTM_hn().cuda()
@@ -169,7 +171,7 @@ optim = torch.optim.Adam(model.parameters(), lr=param.lr)
 criterion = nn.MSELoss()
 
 
-# In[13]:
+# In[12]:
 
 
 def get_loss(dl, model):
@@ -177,8 +179,7 @@ def get_loss(dl, model):
     for X1, y1 in dl:
         X1, y1 = Variable(X1).cuda(), Variable(y1).cuda()
         output = model(X1)
-
-            
+    
         loss1 = criterion(output,y1)
 
         
@@ -187,7 +188,7 @@ def get_loss(dl, model):
     return loss
 
 
-# In[ ]:
+# In[13]:
 
 
 iters = []
@@ -219,15 +220,19 @@ for epoch in range(1,param.epochs):
             pLoss.backward()
             optim.step()
         avgLoss = loss/len(train_dl.dataset)
-    #file1.write('{:1.9f}'.format(avgLoss)+"\n")    
+      
     model.eval()
-    print('before')
+    
     val_loss = get_loss(val_dl, model)
-    print('after')
-    #file2.write('{:1.9f}'.format(val_loss)+"\n")     
+    
+     
     if val_loss < min_loss:
         min_loss = val_loss
         torch.save(model.state_dict(), bst_model_fpath)              
         print('Epoch {:2}, Train Loss:{:>.9f}, Validation Loss:{:>.9f}'.format(epoch,avgLoss,min_loss))
     print(epoch)
+
+
+
+    print('Test Loss:{:>.9f}'.format(avgLoss))    
 
