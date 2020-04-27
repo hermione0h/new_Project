@@ -234,5 +234,4 @@ for epoch in range(1,param.epochs):
 
 
 
-    print('Test Loss:{:>.9f}'.format(avgLoss))    
 
