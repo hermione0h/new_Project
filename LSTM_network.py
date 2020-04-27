@@ -143,7 +143,7 @@ class LSTM_hn(nn.Module):
         
         output1 = Func.relu(self.fc1(new_out))
         
-        de_out = Func.tanh(self.fc2(output1))
+        de_out = Func.leaky_relu(self.fc2(output1))
         
         
         return de_out
