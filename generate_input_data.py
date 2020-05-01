@@ -12,7 +12,74 @@ import os
 import numpy as np
 
 
-# In[9]:
+# In[2]:
+
+
+def cal_mean(dir_in,nfft,hop_size,wlen):
+    for f in listdir(dir_in):
+        sum_col = 0
+        new_path = join(dir_in,f)
+        x,fs = librosa.load(new_path,sr=None)
+                
+        reverb_stft = librosa.stft(x,n_fft = nfft,hop_length = hop_size,win_length = wlen)
+        dims = reverb_stft.shape
+        row_n = dims[0]
+        col_n = dims[1]
+
+        new_comb = np.zeros((dim_size*row_n,col_n))# create a numpy array of size [dim_size * row_n,col_n]
+        sum_m = np.zeros((dim_size*row_n,))
+        # This way can make sure three features can pass in right time sequence
+        phase = np.angle(reverb_stft)
+        cos_stft = np.cos(phase)
+        sin_stft = np.sin(phase)
+        logmag_stft = np.log(np.absolute(reverb_stft)+np.finfo(float).eps)
+        new_comb[0:row_n,:] = logmag_stft
+        new_comb[row_n:2*row_n,:] = sin_stft
+        new_comb[2*row_n:,:] = cos_stft
+        sum_m += np.sum(new_comb,axis=1)
+        sum_col += col_n
+            
+    mean_comb = sum_m/col_n
+    return mean_comb
+                
+
+
+# In[7]:
+
+
+def cal_var(dir_in,mean_c,nfft,hop_size,wlen):
+    for f in listdir(dir_in):
+        sum_col = 0
+        new_path = join(dir_in,f)
+        x,fs = librosa.load(new_path,sr=None)
+                
+        reverb_stft = librosa.stft(x,n_fft = nfft,hop_length = hop_size,win_length = wlen)
+        dims = reverb_stft.shape
+        row_n = dims[0]
+        col_n = dims[1]
+
+        new_comb = np.zeros((dim_size*row_n,col_n))# create a numpy array of size [dim_size * row_n,col_n]
+        sum_m = np.zeros((dim_size*row_n,))
+        # This way can make sure three features can pass in right time sequence
+        phase = np.angle(reverb_stft)
+        cos_stft = np.cos(phase)
+        sin_stft = np.sin(phase)
+        logmag_stft = np.log(np.absolute(reverb_stft)+np.finfo(float).eps)
+        new_comb[0:row_n,:] = logmag_stft
+        new_comb[row_n:2*row_n,:] = sin_stft
+        new_comb[2*row_n:,:] = cos_stft
+        new_input = np.square((new_comb.transpose()-mean_c).transpose())
+        #print(new_input.shape)
+        sum_m += np.sum(new_input,axis=1)
+        sum_col += col_n
+        
+    var_sq = sum_m / sum_col
+    var = np.sqrt(var_sq)
+    return var
+                
+
+
+# In[11]:
 
 
 Fs = 8e3
@@ -26,7 +93,7 @@ num_rirs = 500
 dim_size = 3
 
 
-# In[10]:
+# In[12]:
 
 
 trainPath = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb/train/'
@@ -43,6 +110,8 @@ for a in range(0,len(wlen_time)):
             os.mkdir(newout_path)
         roomNum = 1
         i_loc = 1
+        mean_comb = cal_mean(trainPath,nfft,hop_size,wlen)
+        var = cal_var(trainPath,mean_comb,nfft,hop_size,wlen)
         for i in range(1,num_samples+1):
             if i != 1 and (i - 1) % num_rirs == 0:
                 roomNum += 1
@@ -68,9 +137,10 @@ for a in range(0,len(wlen_time)):
                 new_comb[0:row_n,:] = logmag_stft
                 new_comb[row_n:2*row_n,:] = sin_stft
                 new_comb[2*row_n:,:] = cos_stft
-                
+                out_comb = np.divide((new_comb.transpose() - mean_comb),(var+np.finfo(float).eps)).transpose()
+                #print(out_comb.shape)
                 output_path = newout_path + 'reverb_rir' + "{0:0=4d}".format(i) + '_roomNum' + '%d' % roomNum + '_t60' + '%.1f' % t60 + '_loc' + '%d' % i_loc + '_'+'%d'%(Fs/1000) +'kHz.npy'
-                np.save(output_path,new_comb)
+                np.save(output_path,out_comb)
             i_loc += 1
     
         
@@ -107,6 +177,8 @@ for a in range(0,len(wlen_time)):
             os.mkdir(newout_path)
         roomNum = 1
         i_loc = 1
+        mean_comb = cal_mean(trainPath,nfft,hop_size,wlen)
+        var = cal_var(trainPath,mean_comb,nfft,hop_size,wlen)
         for i in range(1,num_samples+1):
             if i != 1 and (i - 1) % num_rirs == 0:
                 roomNum += 1
@@ -132,9 +204,9 @@ for a in range(0,len(wlen_time)):
                 new_comb[0:row_n,:] = logmag_stft
                 new_comb[row_n:2*row_n,:] = sin_stft
                 new_comb[2*row_n:,:] = cos_stft
-       
+                out_comb = np.divide((new_comb.transpose() - mean_comb),(var+np.finfo(float).eps)).transpose()
                 output_path = newout_path + 'reverb_rir' + "{0:0=4d}".format(i) + '_roomNum' + '%d' % roomNum + '_t60' + '%.1f' % t60 + '_loc' + '%d' % i_loc + '_8kHz.npy'
-                np.save(output_path,new_comb)
+                np.save(output_path,out_comb)
             i_loc += 1
     
         
@@ -178,6 +250,8 @@ for r in range(0,len(roomNums)):
                 os.mkdir(newout_path)
             
             i_loc = 1
+            mean_comb = cal_mean(trainPath,nfft,hop_size,wlen)
+            var = cal_var(trainPath,mean_comb,nfft,hop_size,wlen)
             for i in range(1,num_samples+1):
 
                 for x in range(0,len(t60s)):
@@ -198,9 +272,9 @@ for r in range(0,len(roomNums)):
                     new_comb[0:row_n,:] = logmag_stft
                     new_comb[row_n:2*row_n,:] = sin_stft
                     new_comb[2*row_n:,:] = cos_stft
-
+                    out_comb = np.divide((new_comb.transpose() - mean_comb),(var+np.finfo(float).eps)).transpose()
                     output_path = newout_path + 'reverb_rir' + "{0:0=4d}".format(i) + '_roomNum' + '%d' % roomNum + '_t60' + '%.1f' % t60 + '_loc' + '%d' % i_loc + '_8kHz.npy'
-                    np.save(output_path,new_comb)
+                    np.save(output_path,out_comb)
                 i_loc += 1
 
 
@@ -238,6 +312,8 @@ for a in range(0,len(wlen_time)):
             os.mkdir(newout_path)
         roomNum = 1
         i_loc = 1
+        mean_comb = cal_mean(trainPath,nfft,hop_size,wlen)
+        var = cal_var(trainPath,mean_comb,nfft,hop_size,wlen)
         for i in range(1,num_samples+1):
             if i != 1 and (i - 1) % num_rirs == 0:
                 roomNum += 1
@@ -260,9 +336,9 @@ for a in range(0,len(wlen_time)):
                 new_comb[0:row_n,:] = logmag_stft
                 new_comb[row_n:2*row_n,:] = sin_stft
                 new_comb[2*row_n:,:] = cos_stft
-       
+                out_comb = np.divide((new_comb.transpose() - mean_comb),(var+np.finfo(float).eps)).transpose()
                 output_path = newout_path + 'reverb_rir' + "{0:0=4d}".format(i) + '_roomNum' + '%d' % roomNum + '_t60' + '%.1f' % t60 + '_loc' + '%d' % i_loc + '_8kHz.npy'
-                np.save(output_path,new_comb)
+                np.save(output_path,out_comb)
             i_loc += 1
     
         

@@ -45,7 +45,7 @@ class lateSpeech(data.Dataset):
 
         de_file = self.data2[index]
         X1 = np.load(Xfile1)
-        X1 = normalize(X1)
+        #X1 = normalize(X1)
         de = np.load(de_file)
         
 
@@ -71,8 +71,8 @@ def seqLen(x):
 # In[4]:
 
 
-input_file = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb_train/train_wlen_80_nfft_128_overlap_10/reverb_rir5000_roomNum10_t600.9_loc500_8kHz.npy'
-new_file = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb_valid/valid_wlen_80_nfft_128_overlap_10/reverb_rir0500_roomNum10_t600.9_loc500_8kHz.npy'
+input_file = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb_train/train_wlen_320_nfft_512_overlap_40/reverb_rir5000_roomNum10_t600.9_loc500_8kHz.npy'
+new_file = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb_valid/valid_wlen_320_nfft_512_overlap_40/reverb_rir0500_roomNum10_t600.9_loc500_8kHz.npy'
 print(seqLen(new_file),seqLen(input_file))
 
 class param:
@@ -87,11 +87,11 @@ class param:
     lstm_l = seqLen(input_file)
     ts = 1
 
-mix1_train = "/data/liyuy/PROJECTS/DEREVERB3/block_conv/stft_address/train/train_wlen_80_nfft_128_overlap_10.txt"
+mix1_train = "/data/liyuy/PROJECTS/DEREVERB3/block_conv/stft_address/train/train_wlen_320_nfft_512_overlap_40.txt"
 
 de_train = "/data/liyuy/PROJECTS/DEREVERB3/block_conv/target_address/train/train_target.txt"
 
-mix1_val = "/data/liyuy/PROJECTS/DEREVERB3/block_conv/stft_address/valid/valid_wlen_80_nfft_128_overlap_10.txt"
+mix1_val = "/data/liyuy/PROJECTS/DEREVERB3/block_conv/stft_address/valid/valid_wlen_320_nfft_512_overlap_40.txt"
 
 de_val = "/data/liyuy/PROJECTS/DEREVERB3/block_conv/target_address/valid/valid_target.txt"
 
@@ -197,7 +197,7 @@ val_losses = []
 
 it = 0
 min_loss = np.inf
-bst_model_fpath = '/data/liyuy/PROJECTS/DEREVERB3/LSTM/exp5/model/bst_model_wlen_80_nfft_128_overlap_10.pth'
+bst_model_fpath = '/data/liyuy/PROJECTS/DEREVERB3/LSTM/exp5/model/bst_model_wlen_320_nfft_512_overlap_40.pth'
 model.train(True)
 
 for epoch in range(1,param.epochs):
@@ -234,5 +234,5 @@ for epoch in range(1,param.epochs):
 
 
 
-    print('Test Loss:{:>.9f}'.format(avgLoss))    
+      
 
