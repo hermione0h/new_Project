@@ -98,6 +98,7 @@ dim_size = 3
 
 trainPath = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb/train/'
 outPath = '/data/liyuy/PROJECTS/DEREVERB3/timit_8k/reverb_train/'
+'''
 for a in range(0,len(wlen_time)):
     wlen = int(wlen_time[a] * 1e-3 * Fs)
     if wlen > nfft: # To meet the condition, we multiply by 2 when nfft < wlen
@@ -211,7 +212,7 @@ for a in range(0,len(wlen_time)):
     
         
 
-
+'''
 # In[7]:
 
 
@@ -238,6 +239,7 @@ for r in range(0,len(roomNums)):
     new_out = outPath + '%d'%(r+1) + '/'
     if path.exists(new_out) == False:
         os.mkdir(new_out)
+    nfft = 2 ** 7
     for a in range(0,len(wlen_time)):
         wlen = int(wlen_time[a] * 1e-3 * Fs)
         if wlen > nfft:
@@ -280,7 +282,7 @@ for r in range(0,len(roomNums)):
 
 # In[2]:
 
-
+'''
 Fs = 8e3
 nfft = 2 ** 7 # recomended to be power of 2 and greater than win_len, this is the smallest that meet 10 millisec
 wlen_time = [10,20,40,60,80] # millisec
@@ -341,7 +343,7 @@ for a in range(0,len(wlen_time)):
                 np.save(output_path,out_comb)
             i_loc += 1
     
-        
+'''        
 
 
 # In[ ]:

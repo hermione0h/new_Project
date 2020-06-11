@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as Func
@@ -210,7 +204,7 @@ def get_loss(dl, model):
         new_de = transfer_to_time(y1,param.bs)
         ploss1 = criterion(output,y1)
         ploss2 = criterion(new_out,new_de)
-        loss1 = ploss1 + 2*ploss2
+        loss1 = (ploss1 + 3*ploss2)/4
         loss += loss1.cpu().item() * param.bs
     loss = loss / (len(val_dl.dataset))
     return loss
@@ -225,7 +219,7 @@ val_losses = []
 
 it = 0
 min_loss = np.inf
-bst_model_fpath = '/data/liyuy/PROJECTS/DEREVERB3/LSTM/exp5/model/bst_model_wlen_'+'%d'%wlen+'_nfft_'+'%d'%nfft+'_overlap_'+'%d'%overlap+'time_lambda.pth'
+bst_model_fpath = '/data/liyuy/PROJECTS/DEREVERB3/LSTM/exp5/model/bst_model_wlen_'+'%d'%wlen+'_nfft_'+'%d'%nfft+'_overlap_'+'%d'%overlap+'time_lambda4.pth'
 model.train(True)
 
 for epoch in range(1,param.epochs):
@@ -243,7 +237,7 @@ for epoch in range(1,param.epochs):
 
             pLoss1 = criterion(output,de_gtruth)
             pLoss2 = criterion(new_out,new_de)
-            pLoss = pLoss1 + 2*pLoss2
+            pLoss = (pLoss1 + 3*pLoss2)/4
             
 
             pLoss = criterion(output,de_gtruth)
